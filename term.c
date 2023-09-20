@@ -4,9 +4,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
+#define PROMPT "#cisfun$ "
 #define BUF_SIZE 1024
 
 /**
@@ -14,63 +13,60 @@
  */
 void display_prompt(void)
 {
-    write(STDOUT_FILENO, "$ ", 2);
+write(STDOUT_FILENO, PROMPT, strlen(PROMPT));
 }
 
 /**
- * main - The main function for the simple shell.
+ * main - Entry point for the simple shell.
  *
- * Return: 0 on success, 1 on failure.
+ * Return: 0 on success, otherwise on failure.
  */
 int main(void)
 {
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read_len;
-    size_t newline_pos;
-    pid_t pid;
-    char *argv[2];
+char *line = NULL;
+size_t len = 0;
+ssize_t read_len;
+pid_t pid;
 
-    display_prompt();
-    read_len = getline(&line, &len, stdin);
+while (1)
+{
+display_prompt();
 
-    if (read_len == -1)
-    {
-        write(STDOUT_FILENO, "\n", 1);
-        free(line);
-        exit(0);
-    }
+read_len = getline(&line, &len, stdin);
 
-    newline_pos = strcspn(line, "\n");
-    line[newline_pos] = '\0';
+if (read_len == -1)
+{
+write(STDOUT_FILENO, "\n", 1);
+free(line);
+exit(0);
+}
 
-    pid = fork();
+line[read_len - 1] = '\0';
+pid = fork();
 
-    if (pid < 0)
-    {
-        perror("Fork failed");
-        free(line);
-        exit(1);
-    }
+if (pid == -1)
+{
+perror("Error:");
+continue;
+}
 
-    if (pid == 0)
-    {
-        argv[0] = line;
-        argv[1] = NULL;
+if (pid == 0)
+{
+char *argv[] = { line, NULL };
 
-        if (execve(line, argv, NULL) == -1)
-        {
-            perror(line);
-        }
-        exit(EXIT_FAILURE);
-    }
-    else
-    {
-        int status;
-        waitpid(pid, &status, 0);
-    }
-
-    free(line);
-    return (0);
+if (execve(line, argv, NULL) == -1)
+{
+perror("./shell");
+exit(EXIT_FAILURE);
+}
+}
+else
+{
+int status;
+waitpid(pid, &status, 0);
+}
+}
+free(line);
+return (0);
 }
 

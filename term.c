@@ -20,11 +20,13 @@ pid_t child_pid;
 int status;
 char *args[2];
 
+while (1)
+{
 if (is_interactive)
 printf("#cisfun$ ");
 read = getline(&line, &len, stdin);
 if (read == -1)
-return (1);
+break;
 line[read - 1] = '\0';
 
 args[0] = line;
@@ -40,7 +42,7 @@ else
 {
 wait(&status);
 }
-
+}
 free(line);
 return (0);
 }

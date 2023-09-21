@@ -3,73 +3,70 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <sys/types.h>
 
-#define PROMPT "#cisfun$ "
-#define BUF_SIZE 1024
+#define MAX_INPUT_SIZE 1024
+#define MAX_ARG_SIZE 100
 
 /**
- * display_prompt - Displays the shell prompt.
+ * read_command - Reads and parses the user command.
+ * @cmd: The command.
+ * @args: List of arguments.
+ * Return: Void.
  */
-void display_prompt(void)
+void read_command(char *cmd, char **args)
 {
-write(STDOUT_FILENO, PROMPT, strlen(PROMPT));
+char *input = malloc(MAX_INPUT_SIZE);
+int argcount = 0;
+char *token;
+
+fgets(input, MAX_INPUT_SIZE, stdin);
+token = strtok(input, " \n\t");
+strcpy(cmd, token);
+
+while (token != NULL)
+{
+args[argcount] = token;
+token = strtok(NULL, " \n\t");
+argcount++;
+}
+
+args[argcount] = NULL;
+free(input);
 }
 
 /**
- * main - Entry point for the simple shell.
- *
- * Return: 0 on success, otherwise on failure.
+ * main - Main loop for the shell.
+ * Return: Always 0.
  */
 int main(void)
 {
-char *line = NULL;
-size_t len = 0;
-ssize_t read_len;
+char *args[MAX_ARG_SIZE];
+char cmd[MAX_INPUT_SIZE];
 pid_t pid;
 
 while (1)
 {
-display_prompt();
+printf("> ");
+read_command(cmd, args);
 
-read_len = getline(&line, &len, stdin);
-
-if (read_len == -1)
-{
-write(STDOUT_FILENO, "\n", 1);
-free(line);
-exit(0);
-}
-
-line[read_len - 1] = '\0';
 pid = fork();
-
-if (pid == -1)
+if (pid == 0)  /* Child process */
 {
-perror("Error:");
-continue;
-}
-
-if (pid == 0)
-{
-char *argv[2];
-argv[0] = line;
-argv[1] = NULL;
-
-
-if (execve(line, argv, NULL) == -1)
-{
-perror("./shell");
+execvp(cmd, args);
+perror("Error executing command");
 exit(EXIT_FAILURE);
 }
+else if (pid < 0)
+{
+perror("Fork failed");
+exit(EXIT_FAILURE);
 }
 else
 {
-int status;
-waitpid(pid, &status, 0);
+wait(NULL);
 }
 }
-free(line);
+
 return (0);
 }
 

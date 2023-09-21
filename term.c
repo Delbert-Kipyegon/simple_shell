@@ -7,9 +7,8 @@
 #include <sys/wait.h>
 
 /**
-* strip - Strips leading and trailing whitespaces.
+* strip - Strips leading and trailing whitespaces from a string.
 * @s: String to be stripped.
-* 
 * Return: A pointer to the stripped string.
 */
 char *strip(char *s)
@@ -26,9 +25,10 @@ return s;
 }
 
 /**
-* main - Main function of the shell.
-* 
-* Return: 0 on success, and other values on error.
+* main - Main function for a simple shell.
+* Description: This shell can execute commands with arguments.
+* It has a simple prompt when in interactive mode.
+* Return: 0 on successful exit, error number otherwise.
 */
 int main(void)
 {
@@ -38,7 +38,7 @@ ssize_t read;
 int is_interactive = isatty(STDIN_FILENO);
 pid_t child_pid;
 int status;
-char *args[64];  /* Assume a maximum of 64 arguments for simplicity */
+char *args[64];
 char *token;
 int index;
 
@@ -48,10 +48,14 @@ if (is_interactive)
 printf("#cisfun$ ");
 read = getline(&line, &len, stdin);
 if (read == -1)
-break;
+{
+free(line);
+if (is_interactive)
+printf("\n");
+exit(0);
+}
 line[read - 1] = '\0';
 line = strip(line);
-
 token = strtok(line, " ");
 index = 0;
 while (token != NULL)
@@ -60,19 +64,24 @@ args[index++] = token;
 token = strtok(NULL, " ");
 }
 args[index] = NULL;
-
 child_pid = fork();
 if (child_pid == 0)
 {
 if (execvp(args[0], args) == -1)
 {
 perror(args[0]);
+exit(127);
 }
-exit(EXIT_FAILURE);
 }
 else
 {
 wait(&status);
+if (WIFEXITED(status))
+{
+int exit_status = WEXITSTATUS(status);
+if (exit_status != 0)
+exit(exit_status);
+}
 }
 }
 free(line);

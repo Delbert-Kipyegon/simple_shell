@@ -4,6 +4,25 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <ctype.h>
+
+/**
+* strip - Removes leading and trailing whitespace from a string.
+* @s: Input string to be stripped.
+*
+* Return: Pointer to the stripped string.
+*/
+char *strip(char *s)
+{
+char *end;
+while (*s && isspace(*s))
+s++;
+end = s + strlen(s) - 1;
+while (end > s && isspace(*end))
+end--;
+*(end + 1) = '\0';
+return s;
+}
 
 /**
 * main - Entry point of the shell.
@@ -28,6 +47,7 @@ read = getline(&line, &len, stdin);
 if (read == -1)
 break;
 line[read - 1] = '\0';
+line = strip(line);
 
 args[0] = line;
 args[1] = NULL;

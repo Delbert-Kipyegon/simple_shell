@@ -7,10 +7,10 @@
 #include <sys/wait.h>
 
 /**
-* strip - Removes leading and trailing whitespace from a string.
-* @s: Input string to be stripped.
-*
-* Return: Pointer to the stripped string.
+* strip - Strips leading and trailing whitespaces.
+* @s: String to be stripped.
+* 
+* Return: A pointer to the stripped string.
 */
 char *strip(char *s)
 {
@@ -26,9 +26,9 @@ return s;
 }
 
 /**
-* main - Entry point of the shell.
-*
-* Return: 0 on success, other values on failure.
+* main - Main function of the shell.
+* 
+* Return: 0 on success, and other values on error.
 */
 int main(void)
 {
@@ -38,7 +38,9 @@ ssize_t read;
 int is_interactive = isatty(STDIN_FILENO);
 pid_t child_pid;
 int status;
-char *args[2];
+char *args[64];  /* Assume a maximum of 64 arguments for simplicity */
+char *token;
+int index;
 
 while (1)
 {
@@ -49,13 +51,24 @@ if (read == -1)
 break;
 line[read - 1] = '\0';
 line = strip(line);
-args[0] = line;
-args[1] = NULL;
+
+token = strtok(line, " ");
+index = 0;
+while (token != NULL)
+{
+args[index++] = token;
+token = strtok(NULL, " ");
+}
+args[index] = NULL;
+
 child_pid = fork();
 if (child_pid == 0)
 {
-execvp(args[0], args);
-exit(0);
+if (execvp(args[0], args) == -1)
+{
+perror(args[0]);
+}
+exit(EXIT_FAILURE);
 }
 else
 {

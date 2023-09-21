@@ -41,6 +41,7 @@ int status;
 char *args[64];
 char *token;
 int index;
+int exit_status = 0;
 
 while (1)
 {
@@ -52,7 +53,7 @@ if (read == -1)
 free(line);
 if (is_interactive)
 printf("\n");
-exit(0);
+exit(exit_status);
 }
 line[read - 1] = '\0';
 line = strip(line);
@@ -60,7 +61,7 @@ line = strip(line);
 if (strcmp(line, "exit") == 0)
 {
 free(line);
-exit(0);
+exit(exit_status);
 }
 
 token = strtok(line, " ");
@@ -85,13 +86,11 @@ else
 wait(&status);
 if (WIFEXITED(status))
 {
-int exit_status = WEXITSTATUS(status);
-if (exit_status != 0)
-exit(exit_status);
+exit_status = WEXITSTATUS(status);
 }
 }
 }
 free(line);
-return (0);
+return (exit_status);
 }
 

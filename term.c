@@ -56,6 +56,13 @@ exit(0);
 }
 line[read - 1] = '\0';
 line = strip(line);
+
+if (strcmp(line, "exit") == 0)
+{
+free(line);
+exit(0);
+}
+
 token = strtok(line, " ");
 index = 0;
 while (token != NULL)
@@ -69,7 +76,7 @@ if (child_pid == 0)
 {
 if (execvp(args[0], args) == -1)
 {
-perror(args[0]);
+fprintf(stderr, "%s: command not found\n", args[0]);
 exit(127);
 }
 }

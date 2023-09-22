@@ -1,97 +1,48 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-/**
-* strip - Strips leading and trailing whitespaces from a string.
-* @s: String to be stripped.
-* Return: A pointer to the stripped string.
-*/
-char *strip(char *s)
-{
-char *end;
-if
-(s == NULL) return NULL;
-while (*s && isspace((unsigned char)*s))
-s++;
-end = s + strlen(s) - 1;
-while (end > s && isspace((unsigned char)*end))
-end--;
-*(end + 1) = '\0';
-return (s);
-}
-
+#include "main.h"
 /**
 * main - Main function for a simple shell.
 * Description: This shell can execute commands with arguments.
-* It has a simple prompt when in interactive mode.
 * Return: 0 on successful exit, error number otherwise.
 */
 int main(void)
-{
-char *line = NULL;
+{	char *line = NULL;
 size_t len = 0;
 ssize_t read;
 int is_interactive = isatty(STDIN_FILENO);
 pid_t child_pid;
 int status;
-char *args[64];
-char *token;
-int index;
-int exit_status = 0;
-
+char *args[64], *token;
+int index, exit_status = 0;
 while (1)
 {
 if (is_interactive)
 printf("#cisfun$ ");
 read = getline(&line, &len, stdin);
 if (read == -1)
-{
-free(line);
+{	free(line);
 if (is_interactive)
 printf("\n");
-exit(exit_status);
-}
+exit(exit_status);	}
 line[read - 1] = '\0';
 line = strip(line);
-
 if (strcmp(line, "exit") == 0)
-{
-free(line);
-exit(exit_status);
-}
-
+{	free(line);
+exit(exit_status);	}
 token = strtok(line, " ");
 index = 0;
 while (token != NULL)
-{
-args[index++] = token;
-token = strtok(NULL, " ");
-}
+{	args[index++] = token;
+token = strtok(NULL, " ");	}
 args[index] = NULL;
 child_pid = fork();
 if (child_pid == 0)
 {
 if (execvp(args[0], args) == -1)
-{
-fprintf(stderr, "%s: command not found\n", args[0]);
-exit(127);
-}
-}
+{	fprintf(stderr, "%s: command not found\n", args[0]);
+exit(127);	}	}
 else
-{
-wait(&status);
+{	wait(&status);
 if (WIFEXITED(status))
-{
-exit_status = WEXITSTATUS(status);
-}
-}
-}
+{	exit_status = WEXITSTATUS(status);	}	}	}
 free(line);
-return (exit_status);
-}
-
+return (exit_status);	}
